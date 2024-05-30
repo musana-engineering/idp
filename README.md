@@ -1,2 +1,2 @@
-# internaldevplatform
-![Blank diagram (1)](https://github.com/musana-engineering/internaldevplatform/assets/151420844/30f02448-fdd3-4d08-a150-b03fc1a97c91)
+# Platform Engineering on Kubernetes powered by Terraform, Argo, and FastAPI
+![image](https://github.com/musana-engineering/musana.engineering.github.io/assets/42842390/2db597b3-3db9-4d33-aa47-43de18dd7b84)
