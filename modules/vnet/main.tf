@@ -1,18 +1,12 @@
 resource "azurerm_resource_group" "core" {
-  name     = "RG-Core-idp"
-  location = var.location
-  tags     = var.tags
-}
-
-resource "azurerm_resource_group" "aks" {
-  name     = "RG-Core-aks"
+  name     = "RG-idp-core"
   location = var.location
   tags     = var.tags
 }
 
 resource "azurerm_network_security_group" "nsg" {
   for_each            = var.virtual_network_subnets
-  name                = "nsg-idp-aks"
+  name                = "snet-idp-aks"
   location            = var.location
   resource_group_name = azurerm_resource_group.core.name
   tags                = var.tags
@@ -59,8 +53,8 @@ resource "azurerm_subnet" "subnet" {
 }
 
 data "azurerm_subnet" "aks" {
-  name                 = "snet-aks-idp"
-  virtual_network_name = "vnet-core-idp"
+  name                 = "snet-idp-aks"
+  virtual_network_name = "vnet-idp-core"
   resource_group_name  = azurerm_resource_group.core.name
   depends_on           = [azurerm_subnet.subnet, azurerm_virtual_network.vnet]
 }
@@ -78,9 +72,24 @@ resource "azurerm_private_dns_zone" "core" {
   resource_group_name = azurerm_resource_group.core.name
 }
 
+resource "azurerm_private_dns_zone" "blob" {
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = azurerm_resource_group.core.name
+}
+
+resource "azurerm_private_dns_zone" "aks" {
+  name                = "privatelink.eastus2.azmk8s.io"
+  resource_group_name = azurerm_resource_group.core.name
+}
+
+resource "azurerm_private_dns_zone" "kv" {
+  name                = "privatelink.vaultcore.azure.net"
+  resource_group_name = azurerm_resource_group.core.name
+}
+
 resource "azurerm_private_dns_zone_virtual_network_link" "core" {
   for_each              = var.virtual_networks
-  name                  = "vnet-core-idp"
+  name                  = "vnet-idp-core"
   resource_group_name   = azurerm_resource_group.core.name
   private_dns_zone_name = azurerm_private_dns_zone.core.name
   virtual_network_id    = azurerm_virtual_network.vnet[each.key].id
@@ -88,55 +97,33 @@ resource "azurerm_private_dns_zone_virtual_network_link" "core" {
   depends_on            = [azurerm_virtual_network.vnet]
 }
 
-/*
-resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
-  for_each              = var.virtual_networks
-  name                  = "vnet-${each.value.name}"
-  resource_group_name   = "rg-rphubeastus2"
-  private_dns_zone_name = "privatelink.blob.core.windows.net"
-  virtual_network_id    = azurerm_virtual_network.vnet[each.key].id
-  provider              = azurerm.hub
-  tags                  = var.tags
-  depends_on            = [azurerm_virtual_network.vnet]
-  lifecycle { ignore_changes = [tags] }
-}
-
 resource "azurerm_private_dns_zone_virtual_network_link" "kv" {
   for_each              = var.virtual_networks
-  name                  = "vnet-${each.value.name}"
-  resource_group_name   = "rg-rphubeastus2"
-  private_dns_zone_name = "privatelink.vaultcore.azure.net"
+  name                  = "vnet-idp-core"
+  resource_group_name   = azurerm_resource_group.core.name
+  private_dns_zone_name = azurerm_private_dns_zone.kv.name
   virtual_network_id    = azurerm_virtual_network.vnet[each.key].id
-  provider              = azurerm.hub
-
-  tags = var.tags
-
-  depends_on = [azurerm_virtual_network.vnet]
-  lifecycle { ignore_changes = [tags] }
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "azurefile" {
-  for_each              = var.virtual_networks
-  name                  = "vnet-${each.value.name}"
-  resource_group_name   = "rg-rphubeastus2"
-  private_dns_zone_name = "privatelink.file.core.windows.net"
-  virtual_network_id    = azurerm_virtual_network.vnet[each.key].id
-  provider              = azurerm.hub
   tags                  = var.tags
   depends_on            = [azurerm_virtual_network.vnet]
-  lifecycle { ignore_changes = [tags] }
 }
 
-resource "azurerm_private_dns_zone_virtual_network_link" "acr" {
+resource "azurerm_private_dns_zone_virtual_network_link" "aks" {
   for_each              = var.virtual_networks
-  name                  = "vnet-${each.value.name}"
-  resource_group_name   = "rg-rphubeastus2"
-  private_dns_zone_name = "privatelink.azurecr.io"
+  name                  = "vnet-idp-core"
+  resource_group_name   = azurerm_resource_group.core.name
+  private_dns_zone_name = azurerm_private_dns_zone.aks.name
   virtual_network_id    = azurerm_virtual_network.vnet[each.key].id
-  provider              = azurerm.hub
   tags                  = var.tags
   depends_on            = [azurerm_virtual_network.vnet]
-  lifecycle { ignore_changes = [tags] }
 }
-*/
+
+resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
+  for_each              = var.virtual_networks
+  name                  = "vnet-idp-core"
+  resource_group_name   = azurerm_resource_group.core.name
+  private_dns_zone_name = azurerm_private_dns_zone.blob.name
+  virtual_network_id    = azurerm_virtual_network.vnet[each.key].id
+  tags                  = var.tags
+  depends_on            = [azurerm_virtual_network.vnet]
+}
 
