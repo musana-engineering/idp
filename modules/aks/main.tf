@@ -133,7 +133,7 @@ resource "azurerm_proximity_placement_group" "aks" {
   location            = var.location
   resource_group_name = azurerm_resource_group.aks.name
   zone                = "1"
-  allowed_vm_sizes = ["Standard_D8s_v5", "Standard_D16s_v5", "Standard_D4s_v5",
+  allowed_vm_sizes = ["Standard_DS2_v2", "Standard_DS1_v21", "Standard_D8s_v5", "Standard_D16s_v5", "Standard_D4s_v5",
     "Standard_D2s_v5", "Standard_D32s_v5", "Standard_DS4_v2", "Standard_DS5_v2",
     "Standard_DS3_v2", "Standard_E8bds_v5", "Standard_E16bds_v5", "Standard_E4bds_v5",
   "Standard_D8s_v3", "Standard_D4s_v3", "Standard_D16s_v3", "Standard_D32s_v3", "Standard_D48s_v3"]

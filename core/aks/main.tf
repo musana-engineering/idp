@@ -18,14 +18,14 @@ module "aks" {
       private_cluster_public_fqdn_enabled = true
       node_os_channel_upgrade             = "NodeImage"
       admin_group_object_ids              = "355b9c12-3bb2-4457-91cb-cdfe7afaa11f"
-      
+
       default_node_pool = {
         name                         = "idpcore"
         zones                        = ["1"]
         os_disk_size_gb              = 128
         os_disk_type                 = "Ephemeral"
         orchestrator_version         = "1.29.4"
-        vm_size                      = "Standard_B2s"
+        vm_size                      = "Standard_DS2_v2"
         enable_auto_scaling          = true
         min_count                    = 1
         max_count                    = 3
