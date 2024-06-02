@@ -5,7 +5,7 @@ resource "azurerm_resource_group" "aks" {
 }
 
 resource "azurerm_container_registry" "acr" {
-  name                = "acr-idp-core"
+  name                = "acridpcore"
   resource_group_name = azurerm_resource_group.aks.name
   location            = var.location
   sku                 = "Basic"
@@ -13,25 +13,23 @@ resource "azurerm_container_registry" "acr" {
 }
 
 resource "azurerm_user_assigned_identity" "aks" {
-  for_each            = var.cluster_config
   location            = var.location
-  name                = "mi-${each.value.name}"
+  name                = "mi-aks-idp-core"
   resource_group_name = azurerm_resource_group.aks.name
   tags                = var.tags
 }
 
 resource "azurerm_role_assignment" "mi-identity-operator" {
   for_each             = var.cluster_config
-  principal_id         = azurerm_user_assigned_identity.aks[each.key].principal_id
+  principal_id         = azurerm_user_assigned_identity.aks.principal_id
   role_definition_name = "Managed Identity Operator"
-  scope                = "/subscriptions/${each.value.subscription_id}"
+  scope                = "/subscriptions/${var.subscription_id}"
 
   depends_on = [azurerm_user_assigned_identity.aks]
 }
 
 resource "azurerm_key_vault" "aks" {
-  for_each                    = var.cluster_config
-  name                        = "kv-${each.value.name}"
+  name                        = "kv-idp-core"
   location                    = var.location
   resource_group_name         = azurerm_resource_group.aks.name
   enabled_for_disk_encryption = true
@@ -54,7 +52,7 @@ resource "azurerm_key_vault" "aks" {
 
 resource "azurerm_private_endpoint" "kv" {
   for_each            = var.cluster_config
-  name                = "kv-${each.value.name}"
+  name                = "kv-idp-core"
   resource_group_name = azurerm_resource_group.aks.name
   location            = var.location
   subnet_id           = data.azurerm_subnet.aks.id
@@ -63,8 +61,8 @@ resource "azurerm_private_endpoint" "kv" {
     private_dns_zone_ids = [data.azurerm_private_dns_zone.kv.id]
   }
   private_service_connection {
-    name                           = "kv-${each.value.name}"
-    private_connection_resource_id = azurerm_key_vault.aks[each.key].id
+    name                           = "kv-idp-core"
+    private_connection_resource_id = azurerm_key_vault.aks.id
     is_manual_connection           = false
     subresource_names              = ["vault"]
   }
@@ -77,6 +75,7 @@ resource "azurerm_private_endpoint" "kv" {
 }
 
 resource "azurerm_role_assignment" "dns" {
+  for_each             = var.cluster_config
   principal_id         = azurerm_user_assigned_identity.aks.principal_id
   role_definition_name = "Private DNS Zone Contributor"
   scope                = data.azurerm_private_dns_zone.aks.id
@@ -85,6 +84,7 @@ resource "azurerm_role_assignment" "dns" {
 }
 
 resource "azurerm_role_assignment" "vnet" {
+  for_each             = var.cluster_config
   principal_id         = azurerm_user_assigned_identity.aks.principal_id
   role_definition_name = "Network Contributor"
   scope                = data.azurerm_virtual_network.aks.id
@@ -93,6 +93,7 @@ resource "azurerm_role_assignment" "vnet" {
 }
 
 resource "azurerm_role_assignment" "kv" {
+  for_each             = var.cluster_config
   principal_id         = azurerm_user_assigned_identity.aks.principal_id
   role_definition_name = "Key Vault Secrets User"
   scope                = azurerm_key_vault.aks[each.key].id
@@ -102,6 +103,7 @@ resource "azurerm_role_assignment" "kv" {
 }
 
 resource "azurerm_role_assignment" "acr" {
+  for_each             = var.cluster_config
   principal_id         = azurerm_user_assigned_identity.aks.principal_id
   role_definition_name = "AcrPull"
   scope                = azurerm_container_registry.acr.id
@@ -110,23 +112,24 @@ resource "azurerm_role_assignment" "acr" {
 }
 
 resource "azurerm_role_assignment" "acmebot_secrets_officer" {
+  for_each             = var.cluster_config
   principal_id         = azurerm_user_assigned_identity.aks.principal_id
   role_definition_name = "Key Vault Secrets Officer"
-  scope                = data.azurerm_key_vault.kv.id
+  scope                = azurerm_key_vault.aks.id
   depends_on           = [azurerm_user_assigned_identity.aks]
 }
 
 resource "azurerm_role_assignment" "acmebot_crypto_officer" {
+  for_each             = var.cluster_config
   principal_id         = azurerm_user_assigned_identity.aks.principal_id
   role_definition_name = "Key Vault Crypto Officer"
-  scope                = data.azurerm_key_vault.kv.id
+  scope                = azurerm_key_vault.aks.id
   depends_on           = [azurerm_user_assigned_identity.aks]
 }
 
 // AKS Cluster
 resource "azurerm_proximity_placement_group" "aks" {
-  for_each            = var.cluster_config
-  name                = "ppg-${each.value.name}"
+  name                = "ppg-idp-core"
   location            = var.location
   resource_group_name = azurerm_resource_group.aks.name
   zone                = "1"
@@ -241,24 +244,24 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   default_node_pool {
-    name                         = local.default_node_pool.name
-    zones                        = local.default_node_pool.zones
+    name                         = each.value.default_node_pool.name
+    zones                        = each.value.default_node_pool.zones
     type                         = "VirtualMachineScaleSets"
-    os_disk_size_gb              = local.default_node_pool.os_disk_size_gb
-    os_disk_type                 = local.default_node_pool.os_disk_type
-    orchestrator_version         = local.default_node_pool.orchestrator_version
-    vm_size                      = local.default_node_pool.vm_size
+    os_disk_size_gb              = each.value.default_node_pool.os_disk_size_gb
+    os_disk_type                 = each.value.default_node_pool.os_disk_type
+    orchestrator_version         = each.value.default_node_pool.orchestrator_version
+    vm_size                      = each.value.default_node_pool.vm_size
     vnet_subnet_id               = data.azurerm_subnet.aks.id
-    enable_auto_scaling          = local.default_node_pool.enable_auto_scaling
-    min_count                    = local.default_node_pool.min_count
-    max_count                    = local.default_node_pool.max_count
-    node_count                   = local.default_node_pool.node_count
-    enable_host_encryption       = local.default_node_pool.enable_host_encryption
-    enable_node_public_ip        = local.default_node_pool.enable_node_public_ip
-    max_pods                     = local.default_node_pool.max_pods
-    only_critical_addons_enabled = local.default_node_pool.only_critical_addons_enabled
-    kubelet_disk_type            = "Temporary"
-    os_sku                       = "AzureLinux"
+    enable_auto_scaling          = each.value.default_node_pool.enable_auto_scaling
+    min_count                    = each.value.default_node_pool.min_count
+    max_count                    = each.value.default_node_pool.max_count
+    node_count                   = each.value.default_node_pool.node_count
+    enable_host_encryption       = each.value.default_node_pool.enable_host_encryption
+    enable_node_public_ip        = each.value.default_node_pool.enable_node_public_ip
+    max_pods                     = each.value.default_node_pool.max_pods
+    only_critical_addons_enabled = each.value.default_node_pool.only_critical_addons_enabled
+    kubelet_disk_type            = each.value.default_node_pool.kubelet_disk_type
+    os_sku                       = each.value.default_node_pool.os_sku
     proximity_placement_group_id = azurerm_proximity_placement_group.aks.id
     scale_down_mode              = "Delete"
 
@@ -297,7 +300,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
     azurerm_role_assignment.mi-identity-operator,
     azurerm_key_vault.aks,
     azurerm_proximity_placement_group.aks,
-    azurerm_monitor_workspace.prometheus,
     azurerm_private_endpoint.kv,
     azurerm_user_assigned_identity.aks,
     azurerm_role_assignment.vnet,

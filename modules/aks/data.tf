@@ -20,14 +20,12 @@ data "azurerm_subnet" "aks" {
 }
 
 data "azurerm_subnet" "controlplane" {
-  name                 = "snet-idp-aks"
-  virtual_network_name = "vnet-idp-core"
-  resource_group_name  = "RG-idp-core"
-}
-
-data "azurerm_subnet" "controlplane" {
   name                 = "snet-aks-cplane"
   virtual_network_name = "vnet-idp-core"
   resource_group_name  = "RG-idp-core"
 }
 
+data "azurerm_virtual_network" "aks" {
+  name                = "vnet-idp-core"
+  resource_group_name = "RG-idp-core"
+}

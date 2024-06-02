@@ -2,16 +2,11 @@ variable "location" {}
 variable "tags" {}
 variable "firewall_whitelist" {}
 variable "tenant_id" {}
+variable "subscription_id" {}
 
 variable "cluster_config" {
   type = map(object({
     name                                = string
-    location                            = string
-    tags                                = map(string)
-    subscription_id                     = string
-    tenant_id                           = string
-    firewall_whitelist                  = list(string)
-    virtual_network_subnet_ids          = list(string)
     sku_tier                            = string
     dns_prefix                          = string
     automatic_channel_upgrade           = string
@@ -22,5 +17,23 @@ variable "cluster_config" {
     private_cluster_public_fqdn_enabled = string
     node_os_channel_upgrade             = string
     admin_group_object_ids              = string
+    default_node_pool = object({
+      name                         = string
+      zones                        = list(string)
+      os_disk_size_gb              = number
+      os_disk_type                 = string
+      orchestrator_version         = string
+      vm_size                      = string
+      enable_auto_scaling          = bool
+      min_count                    = number
+      max_count                    = number
+      node_count                   = number
+      max_pods                     = number
+      enable_host_encryption       = bool
+      enable_node_public_ip        = bool
+      only_critical_addons_enabled = bool
+      kubelet_disk_type            = string
+      os_sku                       = string
+    })
   }))
 }
