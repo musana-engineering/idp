@@ -96,7 +96,7 @@ resource "azurerm_role_assignment" "kv" {
   for_each             = var.cluster_config
   principal_id         = azurerm_user_assigned_identity.aks.principal_id
   role_definition_name = "Key Vault Secrets User"
-  scope                = azurerm_key_vault.aks[each.key].id
+  scope                = azurerm_key_vault.aks.id
 
   depends_on = [azurerm_user_assigned_identity.aks,
   azurerm_key_vault.aks]
@@ -133,10 +133,12 @@ resource "azurerm_proximity_placement_group" "aks" {
   location            = var.location
   resource_group_name = azurerm_resource_group.aks.name
   zone                = "1"
-  allowed_vm_sizes = ["Standard_DS2_v2", "Standard_DS1_v21", "Standard_D8s_v5", "Standard_D16s_v5", "Standard_D4s_v5",
+  allowed_vm_sizes = ["Standard_DS2_v2", "Standard_D8s_v5", "Standard_D16s_v5", "Standard_D4s_v5",
     "Standard_D2s_v5", "Standard_D32s_v5", "Standard_DS4_v2", "Standard_DS5_v2",
     "Standard_DS3_v2", "Standard_E8bds_v5", "Standard_E16bds_v5", "Standard_E4bds_v5",
-  "Standard_D8s_v3", "Standard_D4s_v3", "Standard_D16s_v3", "Standard_D32s_v3", "Standard_D48s_v3"]
+    "Standard_D8s_v3", "Standard_D4s_v3", "Standard_D16s_v3", "Standard_D32s_v3", "Standard_D48s_v3",
+    "Standard_B1ls", "Standard_B1ms", "Standard_B1s", "Standard_B2ms",
+  "Standard_B2s", "Standard_B4ms", "Standard_B8ms", "Standard_B12ms"]
 
   tags = var.tags
 }
@@ -237,11 +239,12 @@ resource "azurerm_kubernetes_cluster" "aks" {
     week_index   = "First"
   }
 
-  azure_active_directory_role_based_access_control {
-    tenant_id              = var.tenant_id
-    azure_rbac_enabled     = true
-    admin_group_object_ids = each.value.admin_group_object_ids
-  }
+  #  azure_active_directory_role_based_access_control {
+  #    tenant_id              = var.tenant_id
+  #    azure_rbac_enabled     = true
+  #    managed = false
+  #    admin_group_object_ids = each.value.admin_group_object_ids
+  #  }
 
   default_node_pool {
     name                         = each.value.default_node_pool.name
@@ -287,7 +290,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
     network_mode        = "transparent"
     ebpf_data_plane     = "cilium"
     network_plugin_mode = "overlay"
-    outbound_type       = "managedNATGateway"
+    outbound_type       = "userAssignedNATGateway"
+
+    #    nat_gateway_profile {
+    #      
+    #    }
 
   }
 

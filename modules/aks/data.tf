@@ -1,5 +1,5 @@
 data "azurerm_private_dns_zone" "aks" {
-  name                = "privatelink.eastus2.azmk8s.io"
+  name                = "privatelink.westus3.azmk8s.io"
   resource_group_name = "RG-idp-core"
 }
 

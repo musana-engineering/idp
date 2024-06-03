@@ -17,12 +17,12 @@ module "aks" {
       private_cluster_enabled             = true
       private_cluster_public_fqdn_enabled = true
       node_os_channel_upgrade             = "NodeImage"
-      admin_group_object_ids              = "355b9c12-3bb2-4457-91cb-cdfe7afaa11f"
+      admin_group_object_ids              = ["355b9c12-3bb2-4457-91cb-cdfe7afaa11f"]
 
       default_node_pool = {
         name                         = "idpcore"
         zones                        = ["1"]
-        os_disk_size_gb              = 128
+        os_disk_size_gb              = 80
         os_disk_type                 = "Ephemeral"
         orchestrator_version         = "1.29.4"
         vm_size                      = "Standard_DS2_v2"
@@ -34,7 +34,7 @@ module "aks" {
         enable_host_encryption       = true
         enable_node_public_ip        = true
         only_critical_addons_enabled = true
-        kubelet_disk_type            = "Temporary"
+        kubelet_disk_type            = "OS"
         os_sku                       = "AzureLinux"
       }
     }

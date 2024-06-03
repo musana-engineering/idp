@@ -16,7 +16,7 @@ variable "cluster_config" {
     private_cluster_enabled             = string
     private_cluster_public_fqdn_enabled = string
     node_os_channel_upgrade             = string
-    admin_group_object_ids              = string
+    admin_group_object_ids              = list(string)
     default_node_pool = object({
       name                         = string
       zones                        = list(string)

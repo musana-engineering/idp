@@ -52,13 +52,6 @@ resource "azurerm_subnet" "subnet" {
   depends_on = [azurerm_virtual_network.vnet]
 }
 
-data "azurerm_subnet" "aks" {
-  name                 = "snet-idp-aks"
-  virtual_network_name = "vnet-idp-core"
-  resource_group_name  = azurerm_resource_group.core.name
-  depends_on           = [azurerm_subnet.subnet, azurerm_virtual_network.vnet]
-}
-
 resource "azurerm_subnet_network_security_group_association" "nsg" {
   for_each                  = var.virtual_network_subnets
   subnet_id                 = azurerm_subnet.subnet[each.key].id
@@ -78,7 +71,7 @@ resource "azurerm_private_dns_zone" "blob" {
 }
 
 resource "azurerm_private_dns_zone" "aks" {
-  name                = "privatelink.eastus2.azmk8s.io"
+  name                = "privatelink.westus3.azmk8s.io"
   resource_group_name = azurerm_resource_group.core.name
 }
 
@@ -127,3 +120,63 @@ resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
   depends_on            = [azurerm_virtual_network.vnet]
 }
 
+// Nat Gateway
+
+data "azurerm_subnet" "aks" {
+  name                 = "snet-idp-aks"
+  virtual_network_name = "vnet-idp-core"
+  resource_group_name  = azurerm_resource_group.core.name
+  depends_on           = [azurerm_subnet.subnet, azurerm_virtual_network.vnet]
+}
+
+data "azurerm_subnet" "aks-controlplane" {
+  name                 = "snet-aks-cplane"
+  virtual_network_name = "vnet-idp-core"
+  resource_group_name  = azurerm_resource_group.core.name
+  depends_on           = [azurerm_subnet.subnet, azurerm_virtual_network.vnet]
+}
+
+resource "azurerm_public_ip" "nat" {
+  name                = "pip-ngw-idp-core"
+  location            = azurerm_resource_group.core.location
+  resource_group_name = azurerm_resource_group.core.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+
+  depends_on = [azurerm_virtual_network.vnet,
+  azurerm_subnet.subnet]
+}
+
+resource "azurerm_nat_gateway" "nat" {
+  name                = "ngw-idp-core"
+  location            = azurerm_resource_group.core.location
+  resource_group_name = azurerm_resource_group.core.name
+  sku_name            = "Standard"
+
+  depends_on = [azurerm_virtual_network.vnet,
+  azurerm_subnet.subnet]
+}
+
+resource "azurerm_nat_gateway_public_ip_association" "nat" {
+  nat_gateway_id       = azurerm_nat_gateway.nat.id
+  public_ip_address_id = azurerm_public_ip.nat.id
+
+  depends_on = [azurerm_virtual_network.vnet,
+  azurerm_subnet.subnet]
+}
+
+resource "azurerm_subnet_nat_gateway_association" "aks" {
+  subnet_id      = data.azurerm_subnet.aks.id
+  nat_gateway_id = azurerm_nat_gateway.nat.id
+
+  depends_on = [azurerm_virtual_network.vnet,
+  azurerm_subnet.subnet]
+}
+
+resource "azurerm_subnet_nat_gateway_association" "aks-controlplane" {
+  subnet_id      = data.azurerm_subnet.aks-controlplane.id
+  nat_gateway_id = azurerm_nat_gateway.nat.id
+
+  depends_on = [azurerm_virtual_network.vnet,
+  azurerm_subnet.subnet]
+}
