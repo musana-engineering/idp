@@ -23,7 +23,7 @@ module "network" {
   "musana.engineering"]
 
   virtual_networks = {
-    
+
     "core" = {
       name          = "vnet-idp-core"
       address_space = ["10.141.0.0/16"]
@@ -37,7 +37,6 @@ module "network" {
       name              = "natgw-idp-core"
       allocation_method = "Static"
       sku_name          = "Standard"
-      subnet_id         = data.azurerm_subnet.aks.id
     }
   }
 

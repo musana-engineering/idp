@@ -1,8 +1,17 @@
 variable "location" {}
 variable "firewall_whitelist" {}
 variable "resource_group_name" {}
-variable "private_dns_zones" {
-  type = list(string)
+variable "private_dns_zones" { type = list(string) }
+
+variable "container_service_features" {
+  default = [
+    "EnableAPIServerVnetIntegrationPreview",
+    "KubeletDisk",
+  "EnableEphemeralOSDiskPreview"]
+}
+
+variable "compute_features" {
+  default = ["EncryptionAtHost"]
 }
 
 variable "tags" {
@@ -31,6 +40,5 @@ variable "nat_gateways" {
     name              = string
     allocation_method = string
     sku_name          = string
-    subnet_id         = string
   }))
 }

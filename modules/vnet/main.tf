@@ -13,6 +13,26 @@ resource "azurerm_network_watcher" "watcher" {
   tags = var.tags
 }
 
+resource "azurerm_resource_provider_registration" "container_service" {
+  for_each = toset(var.container_service_features)
+  name     = "Microsoft.ContainerService"
+
+  feature {
+    name       = each.value
+    registered = true
+  }
+}
+
+resource "azurerm_resource_provider_registration" "compute" {
+  for_each = toset(var.compute_features)
+  name     = "Microsoft.ContainerService"
+
+  feature {
+    name       = each.value
+    registered = true
+  }
+}
+
 resource "azurerm_network_security_group" "nsg" {
   for_each            = var.subnets
   name                = each.value.name
@@ -82,6 +102,13 @@ data "azurerm_virtual_network" "vnet" {
   depends_on = [azurerm_virtual_network.vnet]
 }
 
+data "azurerm_subnet" "aks" {
+  name                 = "snet-idp-aks"
+  virtual_network_name = "vnet-idp-core"
+  resource_group_name  = var.resource_group_name
+  depends_on = [ azurerm_subnet.subnet, azurerm_virtual_network.vnet]
+}
+
 resource "azurerm_private_dns_zone_virtual_network_link" "core" {
   for_each              = toset(var.private_dns_zones)
   name                  = "vnet-idp-core"
@@ -128,7 +155,7 @@ resource "azurerm_nat_gateway_public_ip_association" "nat" {
 
 resource "azurerm_subnet_nat_gateway_association" "aks" {
   for_each       = var.nat_gateways
-  subnet_id      = each.value.subnet_id
+  subnet_id      = data.azurerm_subnet.aks.id
   nat_gateway_id = azurerm_nat_gateway.nat[each.key].id
 
   depends_on = [azurerm_virtual_network.vnet,
@@ -137,7 +164,7 @@ resource "azurerm_subnet_nat_gateway_association" "aks" {
 
 resource "azurerm_subnet_nat_gateway_association" "aks-controlplane" {
   for_each       = var.nat_gateways
-  subnet_id      = each.value.subnet_id
+  subnet_id      = data.azurerm_subnet.aks.id
   nat_gateway_id = azurerm_nat_gateway.nat[each.key].id
 
   depends_on = [azurerm_virtual_network.vnet,
