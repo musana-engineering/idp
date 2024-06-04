@@ -9,8 +9,7 @@ locals {
   }
 }
 
-// Virtual network
-module "vnet" {
+module "network" {
   source              = "../../modules/vnet"
   tags                = local.tags
   location            = local.location
@@ -24,6 +23,7 @@ module "vnet" {
   "musana.engineering"]
 
   virtual_networks = {
+    
     "core" = {
       name          = "vnet-idp-core"
       address_space = ["10.141.0.0/16"]
@@ -31,7 +31,8 @@ module "vnet" {
     }
   }
 
-  nat_gateway = {
+  nat_gateways = {
+
     "core" = {
       name              = "natgw-idp-core"
       allocation_method = "Static"
@@ -39,9 +40,9 @@ module "vnet" {
       subnet_id         = data.azurerm_subnet.aks.id
     }
   }
-  
-  // Virtual network subnets
-  virtual_network_subnets = {
+
+  subnets = {
+
     "aks" = {
       name                                          = "snet-idp-aks"
       virtual_network_name                          = "vnet-idp-core"

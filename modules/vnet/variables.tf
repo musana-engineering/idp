@@ -9,7 +9,7 @@ variable "tags" {
   type = map(string)
 }
 
-variable "virtual_network_subnets" {
+variable "subnets" {
   type = map(object({
     name                                          = string
     virtual_network_name                          = string
@@ -26,7 +26,7 @@ variable "virtual_networks" {
   }))
 }
 
-variable "nat_gateway" {
+variable "nat_gateways" {
   type = map(object({
     name              = string
     allocation_method = string

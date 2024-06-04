@@ -14,7 +14,7 @@ resource "azurerm_network_watcher" "watcher" {
 }
 
 resource "azurerm_network_security_group" "nsg" {
-  for_each            = var.virtual_network_subnets
+  for_each            = var.subnets
   name                = each.value.name
   location            = var.location
   resource_group_name = azurerm_resource_group.core.name
@@ -38,7 +38,7 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_subnet" "subnet" {
-  for_each                                      = var.virtual_network_subnets
+  for_each                                      = var.subnets
   name                                          = each.value.name
   resource_group_name                           = azurerm_resource_group.core.name
   virtual_network_name                          = each.value.virtual_network_name
@@ -62,7 +62,7 @@ resource "azurerm_subnet" "subnet" {
 }
 
 resource "azurerm_subnet_network_security_group_association" "nsg" {
-  for_each                  = var.virtual_network_subnets
+  for_each                  = var.subnets
   subnet_id                 = azurerm_subnet.subnet[each.key].id
   network_security_group_id = azurerm_network_security_group.nsg[each.key].id
 
@@ -95,7 +95,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "core" {
 
 // Nat Gateway
 resource "azurerm_public_ip" "nat" {
-  for_each            = var.nat_gateway
+  for_each            = var.nat_gateways
   name                = each.value.name
   location            = azurerm_resource_group.core.location
   resource_group_name = azurerm_resource_group.core.name
@@ -107,7 +107,7 @@ resource "azurerm_public_ip" "nat" {
 }
 
 resource "azurerm_nat_gateway" "nat" {
-  for_each            = var.nat_gateway
+  for_each            = var.nat_gateways
   name                = each.value.name
   location            = azurerm_resource_group.core.location
   resource_group_name = azurerm_resource_group.core.name
@@ -118,7 +118,7 @@ resource "azurerm_nat_gateway" "nat" {
 }
 
 resource "azurerm_nat_gateway_public_ip_association" "nat" {
-  for_each             = var.nat_gateway
+  for_each             = var.nat_gateways
   nat_gateway_id       = azurerm_nat_gateway.nat[each.key].id
   public_ip_address_id = azurerm_public_ip.nat[each.key].id
 
@@ -127,7 +127,7 @@ resource "azurerm_nat_gateway_public_ip_association" "nat" {
 }
 
 resource "azurerm_subnet_nat_gateway_association" "aks" {
-  for_each       = var.nat_gateway
+  for_each       = var.nat_gateways
   subnet_id      = each.value.subnet_id
   nat_gateway_id = azurerm_nat_gateway.nat[each.key].id
 
@@ -136,7 +136,7 @@ resource "azurerm_subnet_nat_gateway_association" "aks" {
 }
 
 resource "azurerm_subnet_nat_gateway_association" "aks-controlplane" {
-  for_each       = var.nat_gateway
+  for_each       = var.nat_gateways
   subnet_id      = each.value.subnet_id
   nat_gateway_id = azurerm_nat_gateway.nat[each.key].id
 
