@@ -11,10 +11,17 @@ locals {
 
 // Virtual network
 module "vnet" {
-  source             = "../../modules/vnet"
-  tags               = local.tags
-  location           = local.location
-  firewall_whitelist = local.firewall_whitelist
+  source              = "../../modules/vnet"
+  tags                = local.tags
+  location            = local.location
+  firewall_whitelist  = local.firewall_whitelist
+  resource_group_name = "RG-idp-net"
+
+  private_dns_zones = [
+    "privatelink.blob.core.windows.net",
+    "privatelink.westus3.azmk8s.io",
+    "privatelink.vaultcore.azure.net",
+  "musana.engineering"]
 
   virtual_networks = {
     "core" = {
@@ -24,6 +31,15 @@ module "vnet" {
     }
   }
 
+  nat_gateway = {
+    "core" = {
+      name              = "natgw-idp-core"
+      allocation_method = "Static"
+      sku_name          = "Standard"
+      subnet_id         = data.azurerm_subnet.aks.id
+    }
+  }
+  
   // Virtual network subnets
   virtual_network_subnets = {
     "aks" = {

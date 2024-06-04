@@ -1,5 +1,9 @@
 variable "location" {}
 variable "firewall_whitelist" {}
+variable "resource_group_name" {}
+variable "private_dns_zones" {
+  type = list(string)
+}
 
 variable "tags" {
   type = map(string)
@@ -19,5 +23,14 @@ variable "virtual_networks" {
     name          = string
     address_space = list(string)
     dns_servers   = list(string)
+  }))
+}
+
+variable "nat_gateway" {
+  type = map(object({
+    name              = string
+    allocation_method = string
+    sku_name          = string
+    subnet_id         = string
   }))
 }

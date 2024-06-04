@@ -12,6 +12,49 @@ resource "azurerm_container_registry" "acr" {
   admin_enabled       = false
 }
 
+resource "azurerm_storage_account" "sa" {
+  name                          = "saaksidpcore"
+  resource_group_name           = azurerm_resource_group.aks.name
+  location                      = var.location
+  account_tier                  = "Standard"
+  large_file_share_enabled      = true
+  account_replication_type      = "LRS"
+  enable_https_traffic_only     = true
+  is_hns_enabled                = true
+  public_network_access_enabled = true
+
+  network_rules {
+    virtual_network_subnet_ids = ["${data.azurerm_subnet.aks.id}"]
+    default_action             = "Deny"
+    ip_rules                   = var.firewall_whitelist
+  }
+
+  tags = var.tags
+
+  lifecycle {
+    ignore_changes = [network_rules]
+  }
+}
+
+resource "azurerm_private_endpoint" "sa" {
+  name                = "saaksidpcore"
+  resource_group_name = azurerm_resource_group.aks.name
+  location            = var.location
+  subnet_id           = data.azurerm_subnet.aks.id
+  private_dns_zone_group {
+    name                 = "default"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.blob.id]
+  }
+  private_service_connection {
+    name                           = "saaksidpcore"
+    private_connection_resource_id = azurerm_storage_account.sa.id
+    is_manual_connection           = false
+    subresource_names              = ["blob"]
+  }
+
+  tags = var.tags
+}
+
 resource "azurerm_user_assigned_identity" "aks" {
   location            = var.location
   name                = "mi-aks-idp-core"
@@ -26,6 +69,15 @@ resource "azurerm_role_assignment" "mi-identity-operator" {
   scope                = "/subscriptions/${var.subscription_id}"
 
   depends_on = [azurerm_user_assigned_identity.aks]
+}
+
+resource "azurerm_log_analytics_workspace" "aks" {
+  name                = "loga-core-idp"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.aks.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+  tags                = var.tags
 }
 
 resource "azurerm_key_vault" "aks" {
