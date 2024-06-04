@@ -2,6 +2,7 @@ locals {
   subscription_id = "94476f39-40ea-4489-8831-da5475ccc163"
   namespaces      = ["argo", "argocd", "argo-rollouts", "argo-events", "external-dns", "external-secrets"]
   tenant_id       = "de5b2627-b190-44c6-a3dc-11c4294198e1"
+  client_id       = "3c61bf30-7604-4cbf-9468-b75a18738cbb"
   region          = "westus3"
 
   labels = {
@@ -17,7 +18,7 @@ resource "null_resource" "download_kubeconfig" {
     command = <<-EOT
       az login --identity
       az account set --subscription ${local.subscription_id}
-      az aks get-credentials --resource-group "${azurerm_resource_group.aks.name}" --name "${azurerm_kubernetes_cluster.aks.name}" --admin
+      az aks get-credentials --resource-group "${data.azurerm_resource_group.aks.name}" --name "${data.azurerm_kubernetes_cluster.aks.name}" --admin
       kubectl get namespace
     EOT
   }
@@ -46,11 +47,28 @@ resource "kubernetes_secret_v1" "external-dns" {
       {
         "tenantId": "${local.tenant_id}",
         "subscriptionId": "${local.subscription_id}",
-        "resourceGroup": "${azurerm_resource_group.rg.name}",
+        "resourceGroup": "${data.azurerm_resource_group.aks.name}",
         "useManagedIdentityExtension": true,
         "userAssignedIdentityID": "${data.azurerm_user_assigned_identity.mi.client_id}"
       }
     EOT
+  }
+}
+
+resource "kubernetes_secret_v1" "argocd_oidc_client" {
+  metadata {
+    name      = "argocd-oidc-client"
+    namespace = "argocd"
+    labels = {
+      "app.kubernetes.io/part-of" = "argocd"
+    }
+  }
+  data = {
+    clientID     = "${local.client_id}"
+    clientSecret = var.client_secret
+    tenantID     = "${local.tenant_id}"
+
+    type = "Opaque"
   }
 }
 
@@ -60,7 +78,7 @@ resource "helm_release" "external-dns" {
   chart            = "external-dns"
   namespace        = "external-dns"
   create_namespace = true
-  values           = ["${file("../values/external-dns.yaml")}"]
+  values           = ["${file("values/external-dns.yaml")}"]
 }
 
 // Deploy External Secrets
@@ -70,7 +88,7 @@ resource "helm_release" "external-secrets" {
   chart            = "external-secrets"
   namespace        = "external-secrets"
   create_namespace = true
-  values           = ["${file("../values/external-secrets.yaml")}"]
+  values           = ["${file("values/external-secrets.yaml")}"]
 }
 
 // Deploy Argo CD
@@ -80,7 +98,7 @@ resource "helm_release" "argocd" {
   chart            = "argo-cd"
   namespace        = "argocd"
   create_namespace = true
-  values           = ["${file("../values/argocd.yaml")}"]
+  values           = ["${file("values/argocd.yaml")}"]
 }
 
 resource "helm_release" "argo-workflows" {
@@ -89,7 +107,7 @@ resource "helm_release" "argo-workflows" {
   chart            = "argo"
   namespace        = "argo"
   create_namespace = true
-  values           = ["${file("../values/argo-workflows.yaml")}"]
+  values           = ["${file("values/argo-workflows.yaml")}"]
 }
 
 // Deploy Argo Rollouts
@@ -99,7 +117,7 @@ resource "helm_release" "argo-rollouts" {
   chart            = "argo-rollouts"
   namespace        = "argo-rollouts"
   create_namespace = true
-  values           = ["${file("../values/rollouts.yaml")}"]
+  values           = ["${file("values/rollouts.yaml")}"]
 }
 
 // Create the Cluster Secret Store (Azure Key vault)

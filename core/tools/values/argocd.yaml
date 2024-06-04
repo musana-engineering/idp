@@ -195,10 +195,10 @@ configs:
         id: microsoft
         name: Microsoft Entra ID
         config:
-          clientID: 3c61bf30-7604-4cbf-9468-b75a18738cbb
-          clientSecret: ""
+          clientID: $argocd-oidc-client:clientID
+          clientSecret: $argocd-oidc-client:clientSecret
           redirectURI: https://argocd.musana.engineering/api/dex/callback
-          tenant: de5b2627-b190-44c6-a3dc-11c4294198e1
+          tenant: $argocd-oidc-client:tenantID
           groups:
             - SG-PlatformTeam
 
