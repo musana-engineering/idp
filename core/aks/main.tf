@@ -7,9 +7,9 @@ module "aks" {
 
   cluster_config = {
     "core" = {
-      name                                = "aks-core-idp"
+      name                                = "aks-idp-core"
       sku_tier                            = "Free"
-      dns_prefix                          = "akscoreidp"
+      dns_prefix                          = "aksidpcore"
       automatic_channel_upgrade           = "node-image"
       kubernetes_version                  = "1.29.4"
       oidc_issuer_enabled                 = true
