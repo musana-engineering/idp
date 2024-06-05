@@ -13,6 +13,7 @@ resource "azurerm_network_watcher" "watcher" {
   tags = var.tags
 }
 
+/*
 resource "azurerm_resource_provider_registration" "container_service" {
   for_each = toset(var.container_service_features)
   name     = "Microsoft.ContainerService"
@@ -20,6 +21,9 @@ resource "azurerm_resource_provider_registration" "container_service" {
   feature {
     name       = each.value
     registered = true
+  }
+  lifecycle {
+    ignore_changes = [feature]
   }
 }
 
@@ -31,7 +35,11 @@ resource "azurerm_resource_provider_registration" "compute" {
     name       = each.value
     registered = true
   }
+  lifecycle {
+    ignore_changes = [feature]
+  }
 }
+*/
 
 resource "azurerm_network_security_group" "nsg" {
   for_each            = var.subnets
@@ -106,7 +114,7 @@ data "azurerm_subnet" "aks" {
   name                 = "snet-idp-aks"
   virtual_network_name = "vnet-idp-core"
   resource_group_name  = var.resource_group_name
-  depends_on = [ azurerm_subnet.subnet, azurerm_virtual_network.vnet]
+  depends_on           = [azurerm_subnet.subnet, azurerm_virtual_network.vnet]
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "core" {
@@ -153,20 +161,17 @@ resource "azurerm_nat_gateway_public_ip_association" "nat" {
   azurerm_subnet.subnet]
 }
 
-resource "azurerm_subnet_nat_gateway_association" "aks" {
-  for_each       = var.nat_gateways
-  subnet_id      = data.azurerm_subnet.aks.id
-  nat_gateway_id = azurerm_nat_gateway.nat[each.key].id
+resource "azurerm_subnet_nat_gateway_association" "nat" {
+  for_each       = var.subnets
+  subnet_id      = azurerm_subnet.subnet[each.key].id
+  nat_gateway_id = data.azurerm_nat_gateway.nat.id
 
   depends_on = [azurerm_virtual_network.vnet,
   azurerm_subnet.subnet]
 }
 
-resource "azurerm_subnet_nat_gateway_association" "aks-controlplane" {
-  for_each       = var.nat_gateways
-  subnet_id      = data.azurerm_subnet.aks.id
-  nat_gateway_id = azurerm_nat_gateway.nat[each.key].id
-
-  depends_on = [azurerm_virtual_network.vnet,
-  azurerm_subnet.subnet]
+data "azurerm_nat_gateway" "nat" {
+  name                = "natgw-idp-core"
+  resource_group_name = var.resource_group_name
+  depends_on          = [azurerm_nat_gateway.nat]
 }

@@ -1,5 +1,5 @@
 locals {
-  firewall_whitelist = ["8.29.228.126", "8.29.109.138"]
+  firewall_whitelist = ["54.39.28.200", "54.39.137.255"]
   location           = "westus3"
 
   tags = {

@@ -3,6 +3,10 @@ variable "tags" {}
 variable "firewall_whitelist" {}
 variable "tenant_id" {}
 variable "subscription_id" {}
+variable "virtual_network_resource_group_name" {}
+variable "virtual_network_name" {}
+variable "aks_subnet_name" {}
+variable "aks_control_plane_subnet_name" {}
 
 variable "cluster_config" {
   type = map(object({

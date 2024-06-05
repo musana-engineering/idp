@@ -62,6 +62,15 @@ resource "azurerm_user_assigned_identity" "aks" {
   tags                = var.tags
 }
 
+resource "azurerm_role_assignment" "contributor" {
+  for_each             = var.cluster_config
+  principal_id         = azurerm_user_assigned_identity.aks.principal_id
+  role_definition_name = "Contributor"
+  scope                = "/subscriptions/${var.subscription_id}"
+
+  depends_on = [azurerm_user_assigned_identity.aks]
+}
+
 resource "azurerm_role_assignment" "mi-identity-operator" {
   for_each             = var.cluster_config
   principal_id         = azurerm_user_assigned_identity.aks.principal_id
@@ -196,21 +205,21 @@ resource "azurerm_proximity_placement_group" "aks" {
 }
 
 resource "azurerm_kubernetes_cluster" "aks" {
-  for_each                            = var.cluster_config
-  name                                = each.value.name
-  location                            = var.location
-  sku_tier                            = each.value.sku_tier
-  resource_group_name                 = azurerm_resource_group.aks.name
-  dns_prefix                          = each.value.dns_prefix
-  automatic_channel_upgrade           = each.value.automatic_channel_upgrade
-  azure_policy_enabled                = true
-  workload_identity_enabled           = true
-  kubernetes_version                  = each.value.kubernetes_version
-  node_resource_group                 = "${azurerm_resource_group.aks.name}-nodes"
-  oidc_issuer_enabled                 = each.value.oidc_issuer_enabled
-  open_service_mesh_enabled           = each.value.open_service_mesh_enabled
-  private_cluster_enabled             = each.value.private_cluster_enabled
-  private_dns_zone_id                 = data.azurerm_private_dns_zone.aks.id
+  for_each                  = var.cluster_config
+  name                      = each.value.name
+  location                  = var.location
+  sku_tier                  = each.value.sku_tier
+  resource_group_name       = azurerm_resource_group.aks.name
+  dns_prefix                = each.value.dns_prefix
+  automatic_channel_upgrade = each.value.automatic_channel_upgrade
+  azure_policy_enabled      = true
+  workload_identity_enabled = true
+  kubernetes_version        = each.value.kubernetes_version
+  node_resource_group       = "${azurerm_resource_group.aks.name}-nodes"
+  oidc_issuer_enabled       = each.value.oidc_issuer_enabled
+  open_service_mesh_enabled = each.value.open_service_mesh_enabled
+  private_cluster_enabled   = each.value.private_cluster_enabled
+  #  private_dns_zone_id                 = data.azurerm_private_dns_zone.aks.id
   private_cluster_public_fqdn_enabled = each.value.private_cluster_public_fqdn_enabled
   role_based_access_control_enabled   = true
   run_command_enabled                 = true
@@ -222,6 +231,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   api_server_access_profile {
     subnet_id                = data.azurerm_subnet.controlplane.id
     vnet_integration_enabled = true
+    authorized_ip_ranges     = var.firewall_whitelist
   }
 
   linux_profile {
@@ -366,4 +376,3 @@ resource "azurerm_kubernetes_cluster" "aks" {
   ]
 
 }
-

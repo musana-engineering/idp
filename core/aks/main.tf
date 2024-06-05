@@ -1,9 +1,13 @@
 module "aks" {
-  source             = "../../modules/aks"
-  location           = "westus3"
-  tenant_id          = "de5b2627-b190-44c6-a3dc-11c4294198e1"
-  subscription_id    = "94476f39-40ea-4489-8831-da5475ccc163"
-  firewall_whitelist = ["8.29.228.126", "8.29.109.138"]
+  source                              = "../../modules/aks"
+  location                            = "westus3"
+  tenant_id                           = "de5b2627-b190-44c6-a3dc-11c4294198e1"
+  subscription_id                     = "94476f39-40ea-4489-8831-da5475ccc163"
+  firewall_whitelist                  = ["54.39.28.200", "54.39.137.255"]
+  virtual_network_name                = "vnet-idp-core"
+  aks_subnet_name                     = "snet-idp-aks"
+  aks_control_plane_subnet_name       = "snet-aks-cplane"
+  virtual_network_resource_group_name = "RG-idp-net"
 
   cluster_config = {
     "core" = {
@@ -14,8 +18,8 @@ module "aks" {
       kubernetes_version                  = "1.29.4"
       oidc_issuer_enabled                 = true
       open_service_mesh_enabled           = false
-      private_cluster_enabled             = true
-      private_cluster_public_fqdn_enabled = true
+      private_cluster_enabled             = false
+      private_cluster_public_fqdn_enabled = false
       node_os_channel_upgrade             = "NodeImage"
       admin_group_object_ids              = ["355b9c12-3bb2-4457-91cb-cdfe7afaa11f"]
 
@@ -46,3 +50,4 @@ module "aks" {
     project     = "idp"
   }
 }
+
