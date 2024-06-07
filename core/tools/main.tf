@@ -105,7 +105,7 @@ resource "helm_release" "argocd" {
   values           = ["${file("values/argocd.yaml")}"]
 }
 
-/*
+
 resource "helm_release" "argo-workflows" {
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
