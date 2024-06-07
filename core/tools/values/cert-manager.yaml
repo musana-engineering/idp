@@ -181,7 +181,8 @@ serviceAccount:
 
   # Optional additional labels to add to the controller's Service Account.
   # +docs:property
-  # labels: {}
+  labels:
+    azure.workload.identity/use: "true"
 
   # Automount API credentials for a Service Account.
   automountServiceAccountToken: true
@@ -316,7 +317,8 @@ volumeMounts: []
 # podAnnotations: {}
 
 # Optional additional labels to add to the controller Pods.
-podLabels: {}
+podLabels:
+  azure.workload.identity/use: "true"
 
 # Optional annotations to add to the controller Service.
 # +docs:property
@@ -373,7 +375,7 @@ hostAliases: []
 # It prevents Pods being scheduled to Windows nodes in a mixed OS cluster.
 # +docs:property
 nodeSelector:
-  agentpool: system
+  agentpool: idpcore
 
 # +docs:ignore
 ingressShim: {}
@@ -753,7 +755,7 @@ webhook:
   # It prevents Pods being scheduled to Windows nodes in a mixed OS cluster.
   # +docs:property
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
 
   # A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).
   #
@@ -796,10 +798,12 @@ webhook:
   topologySpreadConstraints: []
 
   # Optional additional labels to add to the Webhook Pods.
-  podLabels: {}
+  podLabels:
+    azure.workload.identity/use: "true"
 
   # Optional additional labels to add to the Webhook Service.
-  serviceLabels: {}
+  serviceLabels:
+    azure.workload.identity/use: "true"
 
   # Optionally set the IP family policy for the controller Service to configure dual-stack; see [Configure dual-stack](https://kubernetes.io/docs/concepts/services-networking/dual-stack/#services).
   serviceIPFamilyPolicy: ""
@@ -843,7 +847,8 @@ webhook:
 
     # Optional additional labels to add to the webhook's Service Account.
     # +docs:property
-    # labels: {}
+    labels:
+      azure.workload.identity/use: "true"
 
     # Automount API credentials for a Service Account.
     automountServiceAccountToken: true
@@ -1048,7 +1053,7 @@ cainjector:
   # It prevents Pods being scheduled to Windows nodes in a mixed OS cluster.
   # +docs:property
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
 
   # A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).
   #
@@ -1091,7 +1096,8 @@ cainjector:
   topologySpreadConstraints: []
 
   # Optional additional labels to add to the CA Injector Pods.
-  podLabels: {}
+  podLabels:
+    azure.workload.identity/use: "true"
 
   image:
     # The container registry to pull the cainjector image from.
@@ -1250,7 +1256,7 @@ startupapicheck:
   # It prevents Pods being scheduled to Windows nodes in a mixed OS cluster.
   # +docs:property
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
 
   # A Kubernetes Affinity, if required. For more information, see [Affinity v1 core](https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#affinity-v1-core).
   # For example:
@@ -1279,7 +1285,8 @@ startupapicheck:
       operator: Equal
       value: "true"
   # Optional additional labels to add to the startupapicheck Pods.
-  podLabels: {}
+  podLabels:
+    azure.workload.identity/use: "true"
 
   image:
     # The container registry to pull the startupapicheck image from.
@@ -1336,7 +1343,8 @@ startupapicheck:
 
     # Optional additional labels to add to the startupapicheck's Service Account.
     # +docs:property
-    # labels: {}
+    labels:
+      azure.workload.identity/use: "true"
 
   # Additional volumes to add to the cert-manager controller pod.
   volumes: []

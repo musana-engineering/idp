@@ -16,15 +16,14 @@ locals {
 resource "null_resource" "download_kubeconfig" {
   provisioner "local-exec" {
     command = <<-EOT
-      az login --identity --username ${data.azurerm_user_assigned_identity.client_id}
+      az login --identity --username ${data.azurerm_user_assigned_identity.mi.client_id}
       az account set --subscription ${local.subscription_id}
-      az aks get-credentials --resource-group "${data.azurerm_kubernetes_cluster.aks.name}" --name "${data.azurerm_kubernetes_cluster.aks.name}" --admin
+      az aks get-credentials --resource-group "${data.azurerm_resource_group.aks.name}" --name "${data.azurerm_kubernetes_cluster.aks.name}" --admin --overwrite-existing
       kubectl get namespace
     EOT
   }
 }
 
-/*
 // Creat the Kubernetes Namespaces for Argo CD, Argo Rollouts, External DNS, External Secrets
 resource "kubernetes_namespace_v1" "namespaces" {
   count = length(local.namespaces)
@@ -54,7 +53,9 @@ resource "kubernetes_secret_v1" "external-dns" {
       }
     EOT
   }
+  depends_on = [ kubernetes_namespace_v1.namespaces ]
 }
+
 
 resource "kubernetes_secret_v1" "argocd_oidc_client" {
   metadata {
@@ -72,6 +73,7 @@ resource "kubernetes_secret_v1" "argocd_oidc_client" {
     type = "Opaque"
   }
 }
+
 
 // External DNS
 resource "helm_release" "external-dns" {
@@ -103,6 +105,7 @@ resource "helm_release" "argocd" {
   values           = ["${file("values/argocd.yaml")}"]
 }
 
+/*
 resource "helm_release" "argo-workflows" {
   name             = "argocd"
   repository       = "https://argoproj.github.io/argo-helm"
@@ -132,6 +135,7 @@ resource "helm_release" "cert-manager" {
   values           = ["${file("values/cert-manager.yaml")}"]
 }
 
+/*
 // Create the Cluster Secret Store (Azure Key vault)
 resource "null_resource" "cluster_secret_store" {
   provisioner "local-exec" {

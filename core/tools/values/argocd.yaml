@@ -107,7 +107,7 @@ global:
 
   # -- Default node selector for all components
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
 
   # -- Default tolerations for all components
   tolerations: 
@@ -598,7 +598,7 @@ controller:
   replicas: 2
 
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
 
   tolerations: 
     - effect: NoSchedule
@@ -768,7 +768,7 @@ controller:
   # -- [Node selector]
   # @default -- `{}` (defaults to global.nodeSelector)
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
 
   # -- [Tolerations] for use with node taints
   # @default -- `[]` (defaults to global.tolerations)
@@ -1154,7 +1154,7 @@ dex:
   # -- [Node selector]
   # @default -- `{}` (defaults to global.nodeSelector)
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
 
   # -- [Tolerations] for use with node taints
   # @default -- `[]` (defaults to global.tolerations)
@@ -1410,7 +1410,7 @@ redis:
   # -- [Node selector]
   # @default -- `{}` (defaults to global.nodeSelector)
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
 
   # -- [Tolerations] for use with node taints
   # @default -- `[]` (defaults to global.tolerations)
@@ -1498,11 +1498,11 @@ redis:
 # Ref: https://github.com/DandyDeveloper/charts/blob/master/charts/redis-ha/values.yaml
 redis-ha:
   # -- Enables the Redis HA subchart and disables the custom Redis single node deployment
-  enabled: true
+  enabled: false
   ## Redis image
   image:
     # -- Redis repository
-    repository: rpspeastus2acr.azurecr.io/docker/cloudengineering/redis
+    repository: public.ecr.aws/docker/library/redis
     # -- Redis tag
     tag: 7.2.4-alpine
   ## Prometheus redis-exporter sidecar
@@ -1873,7 +1873,7 @@ server:
   # -- [Node selector]
   # @default -- `{}` (defaults to global.nodeSelector)
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
 
   # -- [Tolerations] for use with node taints
   # @default -- `[]` (defaults to global.tolerations)
@@ -2492,7 +2492,7 @@ repoServer:
   # -- [Node selector]
   # @default -- `{}` (defaults to global.nodeSelector)
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
 
   # -- [Tolerations] for use with node taints
   # @default -- `[]` (defaults to global.tolerations)
@@ -2851,7 +2851,7 @@ applicationSet:
   # -- [Node selector]
   # @default -- `{}` (defaults to global.nodeSelector)
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
 
   # -- [Tolerations] for use with node taints
   # @default -- `[]` (defaults to global.tolerations)
@@ -3198,7 +3198,7 @@ notifications:
   # -- [Node selector]
   # @default -- `{}` (defaults to global.nodeSelector)
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
 
   # -- [Tolerations] for use with node taints
   # @default -- `[]` (defaults to global.tolerations)

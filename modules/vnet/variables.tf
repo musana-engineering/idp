@@ -2,6 +2,7 @@ variable "location" {}
 variable "firewall_whitelist" {}
 variable "resource_group_name" {}
 variable "private_dns_zones" { type = list(string) }
+variable "public_dns_zones" { type = list(string) }
 
 variable "container_service_features" {
   default = [

@@ -21,12 +21,12 @@ provider "azurerm" {
 
 provider "kubernetes" {
   config_path    = "~/.kube/config"
-  config_context = "${azurerm_kubernetes_cluster.aks.name}-admin"
+  config_context = "${data.azurerm_kubernetes_cluster.aks.name}-admin"
 }
 
 provider "helm" {
   kubernetes {
     config_path    = "~/.kube/config"
-    config_context = "${azurerm_kubernetes_cluster.aks.name}-admin"
+    config_context = "${data.azurerm_kubernetes_cluster.aks.name}-admin"
   }
 }

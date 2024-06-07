@@ -82,8 +82,9 @@ resource "azurerm_subnet" "subnet" {
     "Microsoft.EventHub",
     "Microsoft.AzureActiveDirectory",
   "Microsoft.Web"]
+
   lifecycle {
-    ignore_changes = [private_link_service_network_policies_enabled]
+    ignore_changes = [private_link_service_network_policies_enabled, delegation]
   }
 
   depends_on = [azurerm_virtual_network.vnet]
@@ -100,6 +101,12 @@ resource "azurerm_subnet_network_security_group_association" "nsg" {
 resource "azurerm_private_dns_zone" "core" {
   for_each            = toset(var.private_dns_zones)
   name                = each.value
+  resource_group_name = azurerm_resource_group.core.name
+}
+
+resource "azurerm_dns_zone" "public" {
+  for_each            = toset(var.public_dns_zones)
+  name                = each.key
   resource_group_name = azurerm_resource_group.core.name
 }
 

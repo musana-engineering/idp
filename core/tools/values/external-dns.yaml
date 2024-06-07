@@ -165,7 +165,7 @@ resources:
 
 # -- Node labels to match for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/).
 nodeSelector: 
-  agentpool: system
+  agentpool: idpcore
 
 # -- Affinity settings for `Pod` [scheduling](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/). If an explicit label selector is not provided for pod affinity or pod anti-affinity one will be created from the pod selector labels.
 affinity: {}

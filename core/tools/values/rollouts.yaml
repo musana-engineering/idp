@@ -55,7 +55,7 @@ controller:
   podAnnotations: {}
   # -- [Node selector]
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
   # -- [Tolerations] for use with node taints
 
   tolerations: 
@@ -301,7 +301,7 @@ dashboard:
   podAnnotations: {}
   # -- [Node selector]
   nodeSelector:
-    agentpool: system
+    agentpool: idpcore
   # -- [Tolerations] for use with node taints
   tolerations: 
     - effect: NoSchedule

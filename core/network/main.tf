@@ -20,7 +20,9 @@ module "network" {
     "privatelink.blob.core.windows.net",
     "privatelink.westus3.azmk8s.io",
     "privatelink.vaultcore.azure.net",
-  "musana.engineering"]
+  "packetdance.com"]
+
+  public_dns_zones = ["packetdance.com"]
 
   virtual_networks = {
 
