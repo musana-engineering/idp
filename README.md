@@ -3,4 +3,4 @@
 
 ![idp-network](https://github.com/musana-engineering/idp/assets/151420844/e448acb6-7001-4cba-a0a6-59ccb9af21c2)
 
-![idp-tools](https://github.com/musana-engineering/idp/assets/151420844/6b9f154f-c3f2-44e5-8b8f-a45f4c90d3d1)
+![platform_tools](https://github.com/musana-engineering/idp/assets/151420844/81dac169-b1b7-4ec7-80c0-a23b12962bb1)
