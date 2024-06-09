@@ -374,5 +374,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     azurerm_role_assignment.vnet,
     azurerm_resource_group.aks
   ]
-
+lifecycle {
+  ignore_changes = [ default_node_pool]
+}
 }

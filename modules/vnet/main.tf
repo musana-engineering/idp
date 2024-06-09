@@ -104,12 +104,6 @@ resource "azurerm_private_dns_zone" "core" {
   resource_group_name = azurerm_resource_group.core.name
 }
 
-resource "azurerm_dns_zone" "public" {
-  for_each            = toset(var.public_dns_zones)
-  name                = each.key
-  resource_group_name = azurerm_resource_group.core.name
-}
-
 data "azurerm_virtual_network" "vnet" {
   name                = "vnet-idp-core"
   resource_group_name = var.resource_group_name

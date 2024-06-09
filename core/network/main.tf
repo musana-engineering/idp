@@ -22,8 +22,6 @@ module "network" {
     "privatelink.vaultcore.azure.net",
   "packetdance.com"]
 
-  public_dns_zones = ["packetdance.com"]
-
   virtual_networks = {
 
     "core" = {

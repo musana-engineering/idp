@@ -39,7 +39,7 @@ crds:
 global:
   # -- Default domain used by all components
   ## Used for ingresses, certificates, SSO, notifications, etc.
-  domain: argocd.musana.engineering
+  domain: argocd.packetdance.com
 
   # -- Common labels for the all resources
   additionalLabels: {}
@@ -197,7 +197,7 @@ configs:
         config:
           clientID: $argocd-oidc-client:clientID
           clientSecret: $argocd-oidc-client:clientSecret
-          redirectURI: https://argocd.musana.engineering/api/dex/callback
+          redirectURI: https://argocd.packetdance.com/api/dex/callback
           tenant: $argocd-oidc-client:tenantID
           groups:
             - SG-PlatformTeam

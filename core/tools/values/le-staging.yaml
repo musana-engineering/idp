@@ -1,0 +1,43 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ingress-tls-staging
+  namespace: cert-manager
+spec:
+  secretName: ingress-tls-staging
+  privateKey:
+    rotationPolicy: Always
+  commonName: {{ .Values.letsencrypt.commonName | quote }}
+  dnsNames:
+    - {{ .Values.letsencrypt.commonName | quote }}
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+
+---
+apiVersion: certmanager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: "https://acme-staging-v02.api.letsencrypt.org/directory"
+    email: {{ .Values.letsencrypt.email }}
+    privateKeySecretRef:
+      name: letsencrypt-staging
+    solvers:
+    - dns01:
+        azureDNS:
+          resourceGroupName: {{ .Values.letsencrypt.resourceGroupName }}
+          subscriptionID: {{ .Values.letsencrypt.subscriptionID }}
+          hostedZoneName: {{ .Values.letsencrypt.hostedZoneName }}
+          environment: AzurePublicCloud
+          managedIdentity:
+            clientID: {{ .Values.letsencrypt.clientID }}
+
+
