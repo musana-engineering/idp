@@ -17,7 +17,12 @@ data "azurerm_user_assigned_identity" "mi" {
 }
 
 data "azurerm_key_vault" "kv" {
-  name                = "RG-idp-aks"
+  name                = "kv-idp-core"
   resource_group_name = data.azurerm_resource_group.aks.name
 }
 
+
+data "azurerm_dns_zone" "azure_dns" {
+  name                = "packetdance.com"
+  resource_group_name = "RG-Core"
+}

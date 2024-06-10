@@ -33,7 +33,7 @@ module "aks" {
         enable_auto_scaling          = true
         min_count                    = 1
         max_count                    = 3
-        node_count                   = 1
+        node_count                   = 3
         max_pods                     = 100
         enable_host_encryption       = true
         enable_node_public_ip        = true

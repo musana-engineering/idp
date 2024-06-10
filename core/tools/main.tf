@@ -1,9 +1,12 @@
 locals {
-  subscription_id = "94476f39-40ea-4489-8831-da5475ccc163"
-  namespaces      = ["argo", "argocd", "argo-rollouts", "argo-events", "external-dns", "external-secrets", "cert-manager"]
-  tenant_id       = "de5b2627-b190-44c6-a3dc-11c4294198e1"
-  client_id       = "3c61bf30-7604-4cbf-9468-b75a18738cbb"
-  region          = "westus3"
+  subscription_id         = "94476f39-40ea-4489-8831-da5475ccc163"
+  namespaces              = ["argo", "argocd", "argo-rollouts", "argo-events", "external-dns", "external-secrets", "cert-manager"]
+  tenant_id               = "de5b2627-b190-44c6-a3dc-11c4294198e1"
+  client_id               = "3c61bf30-7604-4cbf-9468-b75a18738cbb"
+  region                  = "westus3"
+  letsencrypt_dns_name    = "packetdance.com"
+  letsencrypt_common_name = "*.packetdance.com"
+  letsencrypt_email       = "musanajim@gmail.com"
 
   labels = {
     provisioner = "terraform"
@@ -136,6 +139,21 @@ resource "helm_release" "argo-events" {
   kubernetes_namespace_v1.namespaces]
 }
 
+// Kubernetes Secret Replicator
+resource "helm_release" "kubernetes-replicator" {
+  name             = "kubernetes-replicator"
+  repository       = "https://helm.mittwald.de"
+  chart            = "kubernetes-replicator"
+  namespace        = "kube-system"
+  create_namespace = true
+  values           = ["${file("values/kubernetes-replicator.yaml")}"]
+
+  depends_on = [helm_release.external-dns,
+    helm_release.external-secrets,
+    helm_release.argocd,
+    null_resource.download_kubeconfig,
+  kubernetes_namespace_v1.namespaces]
+}
 
 // Argo Rollouts
 resource "helm_release" "argo-rollouts" {
@@ -264,52 +282,85 @@ resource "null_resource" "argo_workflows" {
   kubernetes_namespace_v1.namespaces]
 }
 
-// Letsencrypt Certificate for Ingress.
-resource "helm_release" "letsencrypt-certs" {
-  name      = "letsencrypt-certs"
-  chart     = "values/letsencrypt/"
-  version   = "0.2.0"
-  namespace = "cert-manager"
-
-  set {
-    name  = "letsencrypt.email"
-    value = "musanajim@gmail.com"
+// Letsencrypt Cluster Issuer
+resource "null_resource" "letsencrypt_cluster_issuer" {
+  provisioner "local-exec" {
+    command = <<EOT
+      cat <<EOF > letsencrypt.yaml
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-production
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: "${local.letsencrypt_email}"
+    privateKeySecretRef:
+      name: letsencrypt-production
+    solvers:
+    - dns01:
+        azureDNS:
+          resourceGroupName: ${data.azurerm_resource_group.core.name}
+          subscriptionID: ${local.subscription_id}
+          hostedZoneName: "packetdance.com"
+          environment: AzurePublicCloud
+          managedIdentity:
+            clientID: ${data.azurerm_user_assigned_identity.mi.client_id}
+EOF
+      kubectl apply -f letsencrypt.yaml
+    EOT
   }
-
-  set {
-    name  = "letsencrypt.resourceGroupName"
-    value = data.azurerm_resource_group.core.name
-  }
-
-  set {
-    name  = "letsencrypt.subscriptionID"
-    value = local.subscription_id
-  }
-
-  set {
-    name  = "letsencrypt.hostedZoneName"
-    value = "packetdance.com"
-  }
-
-  set {
-    name  = "letsencrypt.commonName"
-    value = "*.packetdance.com"
-  }
-
-  set {
-    name  = "letsencrypt.clientID"
-    value = data.azurerm_user_assigned_identity.mi.client_id
-  }
-
   depends_on = [helm_release.external-dns,
     helm_release.external-secrets,
     helm_release.argocd,
     null_resource.download_kubeconfig,
     helm_release.argo-events,
     helm_release.argo-rollouts,
+    helm_release.cert-manager,
+  kubernetes_namespace_v1.namespaces]
+}
+
+resource "null_resource" "letsencrypt_certificate" {
+  provisioner "local-exec" {
+    command = <<EOT
+cat <<EOF | kubectl apply -f - -n cert-manager
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ingress-tls
+spec:
+  secretName: ingress-tls
+  privateKey:
+    rotationPolicy: Always
+  commonName: "${local.letsencrypt_common_name}"
+  dnsNames:
+    - "${local.letsencrypt_common_name}"
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+  issuerRef:
+    name: letsencrypt-production
+    kind: ClusterIssuer
+  secretTemplate:
+    annotations:
+      replicator.v1.mittwald.de/replication-allowed: "true"  # permit replication
+      replicator.v1.mittwald.de/replication-allowed-namespaces: "argo,argo-rollouts,argo-events,prod-[0-9]*" 
+EOF
+    EOT
+  }
+
+  depends_on = [
+    helm_release.external-dns,
+    helm_release.external-secrets,
+    helm_release.argocd,
+    null_resource.download_kubeconfig,
+    helm_release.argo-events,
+    helm_release.argo-rollouts,
+    helm_release.cert-manager,
     kubernetes_namespace_v1.namespaces,
-    null_resource.argo_workflows,
-  helm_release.cert-manager]
+    null_resource.letsencrypt_cluster_issuer
+  ]
 }
 
 resource "helm_release" "argo-ingress" {
@@ -386,8 +437,47 @@ resource "null_resource" "cluster_secret_store" {
   null_resource.argo_workflows]
 }
 
+/*
+module "keyvault_acmebot" {
+  source  = "shibayan/keyvault-acmebot/azurerm"
+  version = "~> 3.0"
 
+  app_base_name       = "acmebot-idp"
+  resource_group_name = data.azurerm_resource_group.core.name
+  location            = "westus"
+  mail_address        = "musanajim@gmail.com"
+  vault_uri           = data.azurerm_key_vault.kv.vault_uri
 
+#  auth_settings = {
+#    enabled = true
+#    active_directory = {
+#      client_id            = "${local.client_id}"
+#      client_secret        = "${var.client_secret}"
+#      tenant_auth_endpoint = "https://login.microsoftonline.com/${local.tenant_id}/v2.0"
+#    }
+#  }
+
+  azure_dns = {
+    subscription_id = "${local.subscription_id}"
+  }
+}
+
+resource "azurerm_role_assignment" "acmebot-dns" {
+  principal_id         = module.keyvault_acmebot.principal_id
+  role_definition_name = "DNS Zone Contributor"
+  scope                = data.azurerm_dns_zone.azure_dns.id
+
+  depends_on = [module.keyvault_acmebot]
+}
+
+resource "azurerm_role_assignment" "acmebot-keyvault" {
+  principal_id         = module.keyvault_acmebot.principal_id
+  role_definition_name = "Key Vault Secrets Officer"
+  scope                = data.azurerm_key_vault.kv.id
+
+  depends_on = [module.keyvault_acmebot]
+}
+*/
 
 /*
 resource "null_resource" "ingress_tls_secret" {

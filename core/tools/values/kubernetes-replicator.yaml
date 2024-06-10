@@ -1,0 +1,8 @@
+nodeSelector:
+  agentpool: idpcore
+
+tolerations: 
+  - effect: NoSchedule
+    key: CriticalAddonsOnly
+    operator: Equal
+    value: "true"

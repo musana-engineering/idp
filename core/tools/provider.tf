@@ -12,11 +12,19 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "2.30.0"
     }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "2.51.0"
+    }
   }
 }
 
 provider "azurerm" {
   features {}
+}
+
+provider "azuread" {
+  # Configuration options
 }
 
 provider "kubernetes" {
