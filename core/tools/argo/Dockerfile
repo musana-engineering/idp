@@ -18,10 +18,10 @@ RUN apk update && apk add --no-cache \
     shadow \
     && pip3 install --upgrade pip --break-system-packages \
     && pip3 install azure-cli --break-system-packages \
-    && wget https://releases.hashicorp.com/terraform/$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | grep -oP '"current_version":\s*"\K[^"]+')/terraform_$(curl -s https://checkpoint-api.hashicorp.com/v1/check/terraform | grep -oP '"current_version":\s*"\K[^"]+')_linux_amd64.zip \
-    && unzip terraform_*_linux_amd64.zip -d /usr/local/bin/ \
-    && rm terraform_*_linux_amd64.zip \
-    && curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && wget https://releases.hashicorp.com/terraform/1.8.5/terraform_1.8.5_linux_amd64.zip \
+    && unzip terraform_1.8.5_linux_amd64.zip -d /usr/local/bin/ \
+    && rm terraform_1.8.5_linux_amd64.zip \
+    && curl -LO https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl \
     && install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl \
     && rm kubectl \
     && curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 \
