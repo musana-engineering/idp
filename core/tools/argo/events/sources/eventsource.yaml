@@ -4,7 +4,7 @@ metadata:
   name: webhook
   namespace: argo-events
 spec:
-  eventBusName: eventbus-main
+  eventBusName: eventbus-nats
   service:
     ports:
       - port: 12000
