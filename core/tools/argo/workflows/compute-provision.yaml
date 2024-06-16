@@ -24,7 +24,7 @@ spec:
             value: "default"
       script:
         imagePullPolicy: "Always"
-        image: "rpspeastus2acr.azurecr.io/docker/cloudengineering/tools/{{workflow.parameters.terraform_docker_image}}"
+        image: "musanaengineering/platformtools:terraform-v1.0.0"
         command: [/bin/bash]
         source: |
           sudo chown rpdevops:rpdevops /home/rpdevops -R 
@@ -56,7 +56,7 @@ spec:
             value: "default"
       script:
         imagePullPolicy: "Always"
-        image: "rpspeastus2acr.azurecr.io/docker/cloudengineering/tools/{{workflow.parameters.terraform_docker_image}}"
+        image: "musanaengineering/platformtools:terraform-v1.0.0"
         command: [/bin/bash]
         source: |
           sudo chown rpdevops:rpdevops /home/rpdevops -R 

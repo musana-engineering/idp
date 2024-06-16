@@ -43,8 +43,3 @@ RUN chown -R devops:devops /home/devops
 # Switch to the devops user
 USER devops
 
-# Set up environment variables for Azure CLI (optional)
-ENV PATH="$PATH:/home/devops/.local/bin"
-
-# Define the entrypoint
-ENTRYPOINT ["/bin/bash"]
