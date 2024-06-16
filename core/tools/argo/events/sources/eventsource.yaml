@@ -15,6 +15,7 @@ spec:
       port: "12000"
       endpoint: /storage
       method: POST
+    # 
     compute:
       port: "12000"
       endpoint: /compute

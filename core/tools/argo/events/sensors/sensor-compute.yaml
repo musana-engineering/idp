@@ -1,0 +1,119 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Sensor
+metadata:
+  name: sensor-compute
+  namespace: argo-events
+spec:
+  eventBusName: eventbus-main
+  template:
+    serviceAccountName: sa-argo-workflow
+  dependencies:
+    - name: webhook
+      eventSourceName: webhook
+      eventName: compute
+      eventBusName: eventbus-main
+  triggers:
+    - template:
+        name: terraform
+        k8s:
+          operation: create
+          source:
+            resource:
+              apiVersion: argoproj.io/v1alpha1
+              kind: Workflow
+              metadata:
+                generateName: compute-provision-
+                namespace: argo-events
+              spec:
+                entrypoint: terraform
+                serviceAccountName: sa-argo-workflow
+                imagePullSecrets:
+                  - name: rpspeastus2acr
+                arguments:
+                  parameters:   
+                    - name: region
+                      value: "default" 
+                    - name: cloud_provider
+                      value: "default"
+                    - name: resource_type
+                      value: "default"
+                    - name: environment
+                      value: "default"
+                    - name: requester_name
+                      value: "default"
+                    - name: requester_email
+                      value: "default" 
+                templates:
+                - name: terraform
+                  dag: 
+                    tasks:
+                    - name: terraform-plan
+                      templateRef:
+                        name: compute-provision-workflow
+                        template: plan
+                      arguments:
+                          parameters:
+                            - name: region
+                              value: "{{workflow.parameters.region}}"
+                            - name: cloud_provider
+                              value: "{{workflow.parameters.cloud_provider}}"
+                            - name: resource_type
+                              value: "{{workflow.parameters.resource_type}}"
+                            - name: environment
+                              value: "{{workflow.parameters.environment}}"
+                            - name: requester_name
+                              value: "{{workflow.parameters.requester_name}}"
+                            - name: requester_email
+                              value: "{{workflow.parameters.requester_email}}"
+
+                    - name: approve
+                      templateRef:
+                        name: compute-provision-workflow
+                        template: approve
+
+                    - name: terraform-apply
+                      templateRef:
+                        name: compute-provision-workflow
+                        template: apply
+                      arguments:
+                          parameters:
+                            - name: region
+                              value: "{{workflow.parameters.region}}"
+                            - name: cloud_provider
+                              value: "{{workflow.parameters.cloud_provider}}"
+                            - name: resource_type
+                              value: "{{workflow.parameters.resource_type}}"
+                            - name: environment
+                              value: "{{workflow.parameters.environment}}"
+                            - name: requester_name
+                              value: "{{workflow.parameters.requester_name}}"
+                            - name: requester_email
+                              value: "{{workflow.parameters.requester_email}}"
+                      dependencies: ["terraform-plan"]
+
+
+          parameters:
+            - src:
+                dependencyName: webhook
+                dataKey: body.region
+              dest: spec.arguments.parameters.0.value
+            - src:
+                dependencyName: webhook
+                dataKey: body.cloud_provider
+              dest: spec.arguments.parameters.1.value
+            - src:
+                dependencyName: webhook
+                dataKey: body.resource_type
+              dest: spec.arguments.parameters.2.value
+            - src:
+                dependencyName: webhook
+                dataKey: body.environment
+              dest: spec.arguments.parameters.3.value
+            - src:
+                dependencyName: webhook
+                dataKey: body.requester_name
+              dest: spec.arguments.parameters.4.value
+            - src:
+                dependencyName: webhook
+                dataKey: body.requester_email
+              dest: spec.arguments.parameters.5.value
