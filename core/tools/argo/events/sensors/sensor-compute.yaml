@@ -4,14 +4,14 @@ metadata:
   name: sensor-compute
   namespace: argo-events
 spec:
-  eventBusName: eventbus-main
+  eventBusName: eventbus-nats
   template:
     serviceAccountName: sa-argo-workflow
   dependencies:
     - name: webhook
       eventSourceName: webhook
       eventName: compute
-      eventBusName: eventbus-main
+      eventBusName: eventbus-nats
   triggers:
     - template:
         name: terraform
