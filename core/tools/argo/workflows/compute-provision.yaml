@@ -6,6 +6,10 @@ metadata:
   namespace: argo-events
 spec:
   entrypoint: plan
+  volumes: 
+  - name: platformsecrets
+    secret: 
+      secretName: platformsecrets
   templates: 
     - name: plan
       inputs:
@@ -33,13 +37,17 @@ spec:
 
 
         env:
-        - name: CLIENT_SECRET
+        - name: ARM_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
               name: ceplatform
-              key: CLIENT_SECRET 
+              key: ARM_CLIENT_SECRET 
 
     - name: apply
+      volumes: 
+      - name: platformsecrets
+        secret: 
+          secretName: platformsecrets
       inputs:
         parameters:   
           - name: region
@@ -65,11 +73,11 @@ spec:
 
 
         env:
-        - name: CLIENT_SECRET
+        - name: ARM_CLIENT_SECRET
           valueFrom:
             secretKeyRef:
               name: ceplatform
-              key: CLIENT_SECRET   
+              key: ARM_CLIENT_SECRET   
 
 
     - name: approve
