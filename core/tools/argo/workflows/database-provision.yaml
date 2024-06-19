@@ -1,0 +1,111 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: database-provision-workflow
+  namespace: argo-events
+spec:
+  entrypoint: plan
+  volumes: 
+  - name: platformsecrets
+    secret: 
+      secretName: platformsecrets
+  templates: 
+    - name: plan
+      inputs:
+        parameters:   
+          - name: region
+            value: "default" 
+          - name: cloud_provider
+            value: "default"
+          - name: resource_type
+            value: "default"
+          - name: environment
+            value: "default"
+          - name: requester_name
+            value: "default"
+          - name: requester_email
+            value: "default"
+      script:
+        imagePullPolicy: "Always"
+        image: "musanaengineering/platformtools:terraform-v1.0.0"
+        command: [/bin/bash]
+        source: |
+          sudo chown rpdevops:rpdevops /home/rpdevops -R 
+          sudo chmod 775 /home/rpdevops -R 
+          sudo chmod 400 /home/rpdevops/.ssh/id_rsa
+
+
+        env:
+        - name: ARM_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: ceplatform
+              key: ARM_CLIENT_SECRET 
+
+    - name: apply
+      volumes: 
+      - name: platformsecrets
+        secret: 
+          secretName: platformsecrets
+      inputs:
+        parameters:   
+          - name: region
+            value: "default" 
+          - name: cloud_provider
+            value: "default"
+          - name: resource_type
+            value: "default"
+          - name: environment
+            value: "default"
+          - name: requester_name
+            value: "default"
+          - name: requester_email
+            value: "default"
+      script:
+        imagePullPolicy: "Always"
+        image: "musanaengineering/platformtools:terraform-v1.0.0"
+        command: [/bin/bash]
+        source: |
+          sudo chown rpdevops:rpdevops /home/rpdevops -R 
+          sudo chmod 775 /home/rpdevops -R 
+          sudo chmod 400 /home/rpdevops/.ssh/id_rsa
+
+
+        env:
+        - name: ARM_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: ceplatform
+              key: ARM_CLIENT_SECRET   
+
+
+    - name: approve
+      suspend: {}
+
+      parameters:
+        - src:
+            dependencyName: webhook
+            dataKey: body.region
+          dest: spec.arguments.parameters.0.value
+        - src:
+            dependencyName: webhook
+            dataKey: body.cloud_provider
+          dest: spec.arguments.parameters.1.value
+        - src:
+            dependencyName: webhook
+            dataKey: body.resource_type
+          dest: spec.arguments.parameters.2.value
+        - src:
+            dependencyName: webhook
+            dataKey: body.environment
+          dest: spec.arguments.parameters.3.value
+        - src:
+            dependencyName: webhook
+            dataKey: body.requester_name
+          dest: spec.arguments.parameters.4.value
+        - src:
+            dependencyName: webhook
+            dataKey: body.requester_email
+          dest: spec.arguments.parameters.5.value
+
