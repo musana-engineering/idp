@@ -1,8 +1,8 @@
 locals {
-  subscription_id         = "94476f39-40ea-4489-8831-da5475ccc163"
+  subscription_id         = ""
   namespaces              = ["argo", "argocd", "argo-rollouts", "argo-events", "external-dns", "external-secrets", "cert-manager"]
-  tenant_id               = "de5b2627-b190-44c6-a3dc-11c4294198e1"
-  client_id               = "3c61bf30-7604-4cbf-9468-b75a18738cbb"
+  tenant_id               = ""
+  client_id               = ""
   region                  = "westus3"
   letsencrypt_dns_name    = "packetdance.com"
   letsencrypt_common_name = "*.packetdance.com"
