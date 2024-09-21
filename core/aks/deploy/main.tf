@@ -1,8 +1,8 @@
 module "aks" {
   source                              = "../../modules/aks"
   location                            = "westus3"
-  tenant_id                           = "de5b2627-b190-44c6-a3dc-11c4294198e1"
-  subscription_id                     = "94476f39-40ea-4489-8831-da5475ccc163"
+  tenant_id                           = ""
+  subscription_id                     = ""
   firewall_whitelist                  = ["54.39.28.200", "54.39.137.255"]
   virtual_network_name                = "vnet-idp-core"
   aks_subnet_name                     = "snet-idp-aks"
